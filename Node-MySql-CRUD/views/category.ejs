@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Category Master</title>
+
+</head>
+<body>
+
+    <%- include('header') %>
+    
+    <div>
+        <div class="row">
+          <div class="col-md-12">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">Add Category</button>
+          </div>
+        </div>
+        
+        <form action="/products" method="GET">
+          <button class="btn btn-primary" type="submit">Product Master</button>
+        </form>
+      </div>
+    <table class="table">
+
+    <thead >
+        <tr>
+            <th>Sr No</th>
+            <th>Category id</th>
+            <th>Category Name</th>
+            <th>Operations</th>
+        </tr>
+    
+    </thead>
+        <tbody>
+            <% category.forEach((item, index)=> { %>
+              <tr>
+                <td>
+                  <%= index + 1 %>
+                </td>
+                  <td>
+                    <%= item.categoryid %>
+                  </td>
+                  <td>
+                    <%= item.categoryname %>
+                  </td>
+                <td>
+                  <button class="btn btn-info" onclick="Edit('<%= item.categoryid %>')">Edit</button>
+                  <button class="btn btn-danger" onclick="Delete('<%= item.categoryid %>')">Delete</button>
+                </td>
+              </tr>
+              <% }); %>
+          </tbody>
+        </table>
+        
+      <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="addModalLabel">Add</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-md-12">
+                    <label for="addcategoryname">Category Name</label>
+                    <input type="text" id="addcategoryname">
+                    <br><br>
+                </div>
+              </div>
+            </div>
+ 
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" id="addbtn">Save changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="editModalLabel">Edit</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-md-12">
+                    <label for="categoryname">Category Name</label>
+                    <input type="text" id="categoryname">
+                    <br><br>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" editId="" id="editbtn">Save changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+</body>
+
+</html>
+
+<script>
+    async function Delete(id) {
+    var res = await fetch('/api/category/deletecategory/'+id, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    });
+
+    var json = await res.json();
+
+    alert(json.message)
+    window.location.href = '/category'
+  }
+
+  
+  async function Edit(id){
+    $('#editbtn').attr('editId', id);
+    console.log(id);
+    var res = await fetch('/api/category/getcategorybyId/'+id, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    var res = await res.json();
+    console.log(res)
+    const data = res.categoryDetails;
+    
+     $('#categoryname').val(data.categoryname)
+
+    $('#editModal').modal('show')
+  }
+
+  $('#editbtn').click(async function (e) {
+    e.preventDefault();
+
+    var id = $(this).attr('editId');
+    var categoryname = $('#categoryname').val();
+
+    if (categoryname == '') {
+      alert("Please Enter All fields");
+      return false;
+    }
+
+    var res = await fetch('/api/category/update/'+id, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        categoryname
+      })
+    });
+
+    var json = await res.json();
+
+    alert(json.message)
+    window.location.href = '/category'
+  })
+
+  $('#addbtn').click(async function (e) {
+    e.preventDefault();
+
+    var categoryname = $('#addcategoryname').val();
+
+    if (categoryname == '') {
+      alert("Please Enter Category Name");
+      return false;
+    }
+
+    var res = await fetch('/api/category/createcategory', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        categoryname
+      })
+    });
+
+    var json = await res.json();
+
+    alert(json.message)
+    window.location.href = '/category'
+  })
+
+</script>

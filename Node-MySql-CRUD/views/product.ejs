@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Product Master</title>
+
+</head>
+<body>
+
+    <%- include('header') %>
+    
+    <div>
+        
+        <div class="row">
+          <div class="col-md-12">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">Add Product</button>
+          </div>
+        </div>
+      
+      <div class="row">
+        <form action="/category" method="GET">
+            <button class="btn btn-primary" type="submit">Category Master</button>
+        </form>
+      </div>
+    </div>
+    <table class="table">
+
+    <thead >
+        <tr>
+            <th>Sr No</th>
+            <th>Product Id</th>
+            <th>Product Name</th>
+            <th>Category id</th>
+            <th>Category Name</th>
+            <th>Operations</th>
+        </tr>
+    
+    </thead>
+        <tbody>
+            <% data.forEach((item, index)=> { %>
+              <tr>
+                <td>
+                  <%= index + 1 %>
+                </td>
+                <td>
+                  <%= item.productid %>
+                </td>
+                <td>
+                    <%= item.productname %>
+                  </td>
+                  <td>
+                    <%= item.categoryid %>
+                  </td>
+                  <td>
+                    <%= item.categoryname %>
+                  </td>
+                <td>
+                  <button class="btn btn-info" onclick="Edit('<%= item.productid %>')">Edit</button>
+                  <button class="btn btn-danger" onclick="Delete('<%= item.productid %>')">Delete</button>
+                </td>
+              </tr>
+              <% }); %>
+          </tbody>
+        </table>
+
+        <nav aria-label="...">
+            <ul class="pagination">
+              <% for(let i=0; i< totalProductsCount; i++) { %>
+              <li class="page-item"><a class="page-link" href="/api/products/getall/<%= i+1 %>">  <%= i+1 %></a></li>
+              <% }; %>
+            </ul>
+          </nav>
+        
+        
+      <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="addModalLabel">Add</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-md-12">
+                    <label for="addproductname">Product Name</label>
+                    <input type="text" id="addproductname">
+                    <br><br>
+                    
+                    <label for="Category">Category</label>
+                        
+                    <select id="addCategory">
+                        <option value="">Select</option>
+                        <% category.forEach((item, index)=> { %>
+                       <option value="<%= item.categoryid %>">
+                        <%= item.categoryname %>
+                       </option> 
+                       <% }); %>
+                    </select>
+                </div>
+              </div>
+            </div>
+ 
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" id="addbtn">Save changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="editModalLabel">Edit</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-md-12">
+                    <label for="productname">Product Name</label>
+                    <input type="text" id="productname">
+                    <br><br>
+
+                    
+                    <label for="Category">Category</label>
+                        
+                    <select id="Category">
+                        <option value="">Select</option>
+                        <% category.forEach((item, index)=> { %>
+                       <option value="<%= item.categoryid %>">
+                        <%= item.categoryname %>
+                       </option> 
+                       <% }); %>
+                    </select>
+                    
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" editId="" id="editbtn">Save changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+</body>
+
+</html>
+
+<script>
+    async function Delete(id) {
+    var res = await fetch('/api/products/delete/'+id, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    });
+
+    var json = await res.json();
+
+    alert(json.message)
+    window.location.href = '/'
+  }
+
+  
+  async function Edit(id){
+    $('#editbtn').attr('editId', id);
+
+    var res = await fetch('/api/products/get/'+id, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    var res = await res.json();
+   const data = res.productDetails[0];
+    
+     $('#productname').val(data.productname)
+     $('#Category').val(data.categoryid)
+
+    $('#editModal').modal('show')
+  }
+
+  $('#editbtn').click(async function (e) {
+    e.preventDefault();
+
+    var id = $(this).attr('editId');
+    var productname = $('#productname').val();
+    var categoryname = $('#Category').val();
+
+    if (productname == ''|| categoryname == '') {
+      alert("Please Enter All fields");
+      return false;
+    }
+
+    var res = await fetch('/api/products/update/'+id, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        productname, categoryname
+      })
+    });
+
+    var json = await res.json();
+
+    alert(json.message)
+    window.location.href = '/'
+  })
+
+  $('#addbtn').click(async function (e) {
+    e.preventDefault();
+
+    var productname = $('#addproductname').val();
+    var categoryid = $('#addCategory').val();
+    console.log(categoryid,productname);
+
+    if (productname == '' || categoryid == '') {
+      alert("Please Enter Product Name");
+      return false;
+    }
+
+    var res = await fetch('/api/products/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        productname, categoryid
+      })
+    });
+
+    var json = await res.json();
+
+    alert(json.message)
+    window.location.href = '/'
+  })
+
+
+</script>
